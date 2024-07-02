@@ -1,5 +1,6 @@
 from time import sleep
 import pandas as pd
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -66,75 +67,86 @@ def time_converter(time1):
             return time1
 
 
+def scraping_function():
+    driver = webdriver.Chrome(executable_path="C:/Users/abhig/OneDrive/Documents/Driverchromedriver.exe")
+    url = 'https://icllm2023.org/en/scientific-program'
+    driver.get(url)
+    
+    input('ENTER')
+    
+    li_date = []
+    li_start = []
+    li_end = []
+    li_loc = []
+    li_article = []
+    li_auth = []
+    li_aff = []
+    
+    date_xpath = '//div[@class="scientific-date"]'
+    dates = driver.find_elements(By.XPATH,date_xpath)
+    dates = [x.text for x in dates]
+    dates = ['May 12, 2023' if '12' in x else 'May 13, 2023' for x in dates]
+    dates = dates[:3] + [dates[2]] + dates[3:5]+[dates[4]]+dates[5:]
+    
+    time_xpath = '//div[@class="scientific-clock-2"]'
+    time1 = driver.find_elements(By.XPATH, time_xpath)
+    time1 = [x.text for x in time1]
+    time1 = time1[:3] + [time1[2]] + time1[3:5]+[time1[4]]+time1[5:]
+    li_start = [(x.split(' - '))[0] for x in time1]
+    li_end = [(x.split(' - '))[1] for x in time1]
+    
+    session_xpath = '//div[@class="scientific-container-program"]/div'
+    sessions = driver.find_elements(By.XPATH,session_xpath)
+    
+    loc_xpath = '//div[@class="scientific-container-program"]/div/div[1]'
+    loc = driver.find_elements(By.XPATH, loc_xpath)
+    loc = [x.text for x in loc]
+    
+    session_titles_xpath = '//div[@class="scientific-container-program"]/div/h1'
+    session_titles = driver.find_elements(By.XPATH,session_titles_xpath)
+    li_session = [x.text for x in session_titles]
+    session_auth_aff_xpath = '//div[@class="scientific-container-program"]/div/div[2]'
+    session_auth_aff = driver.find_elements(By.XPATH,session_auth_aff_xpath)
+    session_auth_aff = [x.text for x in session_auth_aff]
+    li_session_auth = []
+    li_session_aff = []
+    for auth_aff in session_auth_aff:
+        logging.info('session_auth_aff - ',x)
+        auth_aff_split = auth_aff.split('\n')
+        logging.info('session auth_aff split - ',auth_aff_split)
+        
+        auth1 = ''
+        aff1 = ''
+        
+        if len(auth_aff_split)>0:
+            auth_count = 1
+            while True:
+                try:
+                    auth_aff_split_part = auth_aff_split[auth_count]
+                    logging.info('auth_aff_split_part - ',auth_aff_split_part)
+                    y = auth_aff_split_part.split(',',1)
+                    logging.info('auth_aff_split_part splitted - ',y)
+                    aff1 += '; ' + y[1]
+                    auth1 += '; ' + y[0]
+                    auth_count+=1
+                except:
+                    break
+            li_session_aff.append(aff1[2:])
+            li_session_auth.append(auth1[2:])
+        else:
+            li_session_aff.append('')
+            li_session_auth.append('')
+    
+    data = pd.DataFrame()
+    data['date'] = dates
+    data['Start'] = li_start
+    data['End'] = li_end
+    data['Loc'] = loc
+    data['Session Title'] = li_session
+    data['Auth'] = li_session_auth
+    data['Aff'] = li_session_aff
+    data.to_excel('scarping_2_results.xlsx',index = False)
 
-driver = webdriver.Chrome(executable_path="C:/Users/abhig/OneDrive/Documents/Driverchromedriver.exe")
-url = 'https://icllm2023.org/en/scientific-program'
-driver.get(url)
-input('ENTER')
-li_date = []
-li_start = []
-li_end = []
-li_loc = []
-li_article = []
-li_auth = []
-li_aff = []
-date_xpath = '//div[@class="scientific-date"]'
-dates = driver.find_elements(By.XPATH,date_xpath)
-dates = [x.text for x in dates]
-dates = ['May 12, 2023' if '12' in x else 'May 13, 2023' for x in dates]
-dates = dates[:3] + [dates[2]] + dates[3:5]+[dates[4]]+dates[5:]
-time_xpath = '//div[@class="scientific-clock-2"]'
-time1 = driver.find_elements(By.XPATH, time_xpath)
-time1 = [x.text for x in time1]
-time1 = time1[:3] + [time1[2]] + time1[3:5]+[time1[4]]+time1[5:]
-li_start = [(x.split(' - '))[0] for x in time1]
-li_end = [(x.split(' - '))[1] for x in time1]
 
-
-session_xpath = '//div[@class="scientific-container-program"]/div'
-sessions = driver.find_elements(By.XPATH,session_xpath)
-loc_xpath = '//div[@class="scientific-container-program"]/div/div[1]'
-loc = driver.find_elements(By.XPATH, loc_xpath)
-loc = [x.text for x in loc]
-session_titles_xpath = '//div[@class="scientific-container-program"]/div/h1'
-session_titles = driver.find_elements(By.XPATH,session_titles_xpath)
-li_session = [x.text for x in session_titles]
-session_auth_aff_xpath = '//div[@class="scientific-container-program"]/div/div[2]'
-session_auth_aff = driver.find_elements(By.XPATH,session_auth_aff_xpath)
-session_auth_aff = [x.text for x in session_auth_aff]
-li_session_auth = []
-li_session_aff = []
-for x in session_auth_aff:
-    print('X - ',x)
-    xx = x.split('\n')
-    print('xx - ',xx)
-    auth1 = ''
-    aff1 = ''
-    if len(xx)>0:
-        auth_count = 1
-        while True:
-            try:
-                xxx = xx[auth_count]
-                print('XXX - ',xxx)
-                y = xxx.split(',',1)
-                print('yyyyyy - ',y)
-                aff1 += '; ' + y[1]
-                auth1 += '; ' + y[0]
-                auth_count+=1
-            except:
-                break
-        li_session_aff.append(aff1[2:])
-        li_session_auth.append(auth1[2:])
-    else:
-        li_session_aff.append('')
-        li_session_auth.append('')
-
-data = pd.DataFrame()
-data['date'] = dates
-data['Start'] = li_start
-data['End'] = li_end
-data['Loc'] = loc
-data['Session Title'] = li_session
-data['Auth'] = li_session_auth
-data['Aff'] = li_session_aff
-data.to_excel('Site_1.xlsx',index = False)
+if __name__ == '__main__':
+    scraping_function()
