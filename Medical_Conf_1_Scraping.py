@@ -1,5 +1,6 @@
 from time import sleep
 import pandas as pd
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -73,7 +74,7 @@ input('click')
 li_session = []
 li_start = []
 li_end = []
-li_date = []#######################
+li_date = []
 li_article = []
 li_loc = []
 li_auth = []
@@ -91,12 +92,12 @@ for tab_count in range(len(tabs)):
     clicks = driver.find_elements(By.XPATH,click_xpath)
     loc_xpath = '//p[@class="pv-session-hall ng-scope"]'
     sessions = driver.find_elements(By.XPATH,session_xpath)
-    print('SSSSSSSSS  - ',len(sessions))
+    logging.info('Session length  - ',len(sessions))
     sessions_text = [x.text for x in sessions]
     session_time = [(x.split('\n'))[0] for x in sessions_text]
     session_titles = [(x.split('\n'))[1] for x in sessions_text]
     for sess_count in range(len(sessions)):
-        print('SESSION COUNT - ',sess_count)
+        logging.info('SESSION COUNT - ',sess_count)
         sessions = driver.find_elements(By.XPATH, session_xpath)
         sess = sessions[sess_count]
         click_xpath = '//a[@title="Click to expand"]'
@@ -124,7 +125,7 @@ for tab_count in range(len(tabs)):
         li_aff.append('')
      #   driver.execute_script("arguments[0].click();", sess)
         article_times = [x.text for x in driver.find_elements(By.XPATH,'//div[@class="pv-lecture ng-scope"]/div[@ng-if="lecture.timeDisplay"]')]
-        print("ARTICLE TIMES - ",len(article_times))
+        logging.info("ARTICLE TIMES - ",len(article_times))
         li_start += [(x.split(' - ',1))[0] for x in article_times]
         li_end += [(x.split(' - ',1))[1] for x in article_times]
         li_session += [session_title for x in article_times]
@@ -152,4 +153,4 @@ data['end']  = li_end
 data['loc'] = li_loc
 data['session'] = li_session
 
-data.to_excel('2.xlsx',index=False)
+data.to_excel('conf_1_scraping_output.xlsx',index=False)
